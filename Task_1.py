@@ -1,0 +1,1 @@
+prinr("Hello world")
