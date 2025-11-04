@@ -4,7 +4,7 @@ def caching_fibonacci():
     cache = {}
 
     def fibonacci(n):
-    
+        
         # Перевірка базових випадків
         if n <= 0:
             return 0
@@ -34,5 +34,4 @@ if __name__ == "__main__":
     print(fib(10))  # Виведе 55
     print(fib(15))  # Виведе 610
     print(fib(20))  # Виведе 6765
-
 
