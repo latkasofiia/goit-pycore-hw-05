@@ -1,7 +1,6 @@
+# assistant_bot.py
 
-# Декоратор для обробки помилок користувацького вводу
 def input_error(func):
-
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -10,22 +9,21 @@ def input_error(func):
         except ValueError:
             return "Give me name and phone please."
         except IndexError:
-            return "Enter user name."
+            return "Enter the argument for the command"
     return inner
 
 
-# Команди бота
 @input_error
 def add_contact(args, contacts):
-    #  Додає новий контакт у словник 
-    name, phone = args  # може викликати ValueError, якщо немає двох аргументів
+    # очікуємо: args -> [name, phone]
+    name, phone = args  # ValueError якщо аргументів не 2
     contacts[name] = phone
     return f"Contact {name} added."
 
 
 @input_error
 def change_contact(args, contacts):
-    # Змінює номер телефону для існуючого контакту 
+    # очікуємо: args -> [name, phone]
     name, phone = args
     if name not in contacts:
         raise KeyError
@@ -35,58 +33,61 @@ def change_contact(args, contacts):
 
 @input_error
 def get_phone(args, contacts):
-    # Повертає номер телефону для заданого контакту
-    name = args[0]
-    if name not in contacts:
-        raise KeyError
+    # Зайва явна перевірка не потрібна — contacts[name] підкине KeyError
+    name = args[0]  # IndexError якщо args пустий
     return f"{name}: {contacts[name]}"
 
 
 @input_error
 def show_all(contacts):
-    # Виводить усі збережені контакти 
     if not contacts:
         return "No contacts found."
-    result = []
-    for name, phone in contacts.items():
-        result.append(f"{name}: {phone}")
-    return "\n".join(result)
+    return "\n".join(f"{name}: {phone}" for name, phone in contacts.items())
 
+
+def parse_input(user_input: str):
+    """Повертає (command, args). Якщо пустий рядок — повертає (None, [])."""
+    parts = user_input.strip().split()
+    if not parts:
+        return None, []
+    command = parts[0].lower()
+    args = parts[1:]
+    return command, args
 
 
 def main():
-    # Основна функція для запуску консольного бота 
     contacts = {}
-
     print("Welcome to the assistant bot!")
     print("Available commands: add, change, phone, all, exit")
 
     while True:
-        command = input("Enter a command: ").strip().lower()
+        raw = input("Enter a command: ")
+        command, args = parse_input(raw)
 
-        if command in ["exit", "close", "good bye"]:
+        # якщо користувач просто натиснув Enter
+        if command is None:
+            print("Please type a command (add, change, phone, all, exit).")
+            continue
+
+        # підтримка декількох варіантів виходу
+        if command in ("exit", "close", "bye", "goodbye", "good"):
             print("Good bye!")
             break
 
-        elif command == "add":
-            args = input("Enter name and phone: ").strip().split()
+        # ТУТ — ключова логіка: ми порівнюємо перше слово (command),
+        # а аргументи беремо з args. Саме це забезпечує, що рядок
+        # "add a 1" сприйматиметься як команда add з аргументами.
+        if command == "add":
             print(add_contact(args, contacts))
-
         elif command == "change":
-            args = input("Enter name and new phone: ").strip().split()
             print(change_contact(args, contacts))
-
         elif command == "phone":
-            args = input("Enter name: ").strip().split()
             print(get_phone(args, contacts))
-
         elif command == "all":
             print(show_all(contacts))
-
         else:
             print("Unknown command. Please try again.")
 
 
-# Точка входу
 if __name__ == "__main__":
     main()
